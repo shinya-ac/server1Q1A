@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  api:
+    container_name: 1q1a_api
+    build: ./src
+    volumes:
+      - ./src:/app/src
+    tty: false
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - 1q1a_api_network
+      
+  db:
+    container_name: 1q1a_api_db
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    platform: linux/x86_64
+    ports:
+      - 3306:3306
+    env_file:
+      - ./mysql/.env
+    command: mysqld --innodb_use_native_aio=0
+    volumes:
+      - type: volume
+        source: mysql_1q1a_api_volume
+        target: /var/lib/mysql
+      - type: bind
+        source: ./mysql/init
+        target: /docker-entrypoint-initdb.d
+    networks:
+      - 1q1a_api_network
+
+volumes:
+  mysql_1q1a_api_volume:
+    name: mysql_1q1a_api_volume
+
+networks:
+  1q1a_api_network:
+    external: false
