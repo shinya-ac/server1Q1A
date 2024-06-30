@@ -15,7 +15,6 @@ func main() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		fmt.Printf("configエラー：%+v", err)
 		logging.Logger.Error("configの読み込みに失敗", "error", err)
 	}
 	fmt.Printf(cfg.APIKey1)
