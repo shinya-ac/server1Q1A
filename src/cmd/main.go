@@ -1,16 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	config "github.com/shinya-ac/server1Q1A/configs"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
+	"github.com/shinya-ac/server1Q1A/server"
 )
 
 func main() {
 	logging.InitLogger()
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	logging.Logger.Info("log初期化")
 
 	cfg, err := config.LoadConfig()
@@ -21,5 +23,5 @@ func main() {
 
 	// db.NewMainDB(cfg)
 
-	// server.Run(ctx, cfg)
+	server.Run(ctx, cfg)
 }
