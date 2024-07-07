@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	config "github.com/shinya-ac/server1Q1A/configs"
+	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/db"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 	"github.com/shinya-ac/server1Q1A/server"
 )
@@ -21,7 +22,7 @@ func main() {
 	}
 	fmt.Printf(cfg.APIKey1)
 
-	// db.NewMainDB(cfg)
+	db.NewMainDB(cfg)
 
 	server.Run(ctx, cfg)
 }
