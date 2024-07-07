@@ -6,6 +6,7 @@ services:
     build: ./src
     volumes:
       - ./src:/app/src
+      - ./cert.pem:/etc/ssl/cert.pem
     tty: false
     ports:
       - "8080:8080"
