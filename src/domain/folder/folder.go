@@ -10,12 +10,14 @@ import (
 )
 
 type Folder struct {
-	Id    string
-	Title string
+	Id     string
+	Title  string
+	UserId string
 }
 
 func NewFolder(
 	Title string,
+	UserId string,
 ) (*Folder, error) {
 	if utf8.RuneCountInString(Title) < titleLengthMin || utf8.RuneCountInString(Title) > titleLengthMax {
 		err := errDomain.NewError("タイトルの値が不正です。")
@@ -29,8 +31,9 @@ func NewFolder(
 	}
 
 	return &Folder{
-		Id:    id.String(),
-		Title: Title,
+		Id:     id.String(),
+		Title:  Title,
+		UserId: UserId,
 	}, nil
 }
 

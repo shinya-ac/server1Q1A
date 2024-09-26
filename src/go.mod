@@ -3,6 +3,8 @@ module github.com/shinya-ac/server1Q1A
 go 1.19
 
 require (
+	github.com/auth0/go-jwt-middleware v1.0.1
+	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/uuid v1.6.0

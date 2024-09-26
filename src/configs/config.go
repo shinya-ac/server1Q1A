@@ -20,6 +20,9 @@ type ConfigList struct {
 	APIKey1       string
 	APIKey2       string
 	APIKey3       string
+	AuthDomain    string
+	AuthClientID  string
+	SigningMethod string
 }
 
 var Config ConfigList
@@ -54,6 +57,9 @@ func LoadConfig() (ConfigList, error) {
 		APIKey1:       getEnv("API_KEY1", getINIValue(cfg, "api", "key1", "")),
 		APIKey2:       getEnv("API_KEY2", getINIValue(cfg, "api", "key2", "")),
 		APIKey3:       getEnv("API_KEY3", getINIValue(cfg, "api", "key3", "")),
+		AuthDomain:    getEnv("AUTH_DOMAIN", getINIValue(cfg, "auth0", "auth_domain", "")),
+		AuthClientID:  getEnv("AUTH_CLIENT_ID", getINIValue(cfg, "auth0", "auth_client_id", "")),
+		SigningMethod: getEnv("JWT_SIGNING_METHOD", getINIValue(cfg, "auth0", "signing_method", "")),
 	}
 
 	if Config.DBUser == "" {
@@ -88,6 +94,15 @@ func LoadConfig() (ConfigList, error) {
 	}
 	if Config.APIKey3 == "" {
 		missingConfig = append(missingConfig, "API_KEY3")
+	}
+	if Config.AuthDomain == "" {
+		missingConfig = append(missingConfig, "AUTH_DOMAIN")
+	}
+	if Config.AuthClientID == "" {
+		missingConfig = append(missingConfig, "AUTH_CLIENT_ID")
+	}
+	if Config.SigningMethod == "" {
+		missingConfig = append(missingConfig, "JWT_SIGNING_METHOD")
 	}
 
 	if len(missingConfig) > 0 {

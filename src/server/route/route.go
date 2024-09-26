@@ -8,6 +8,7 @@ import (
 	folderApp "github.com/shinya-ac/server1Q1A/application/folder"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/db"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/repository"
+	"github.com/shinya-ac/server1Q1A/middlewares/auth0"
 	folderPre "github.com/shinya-ac/server1Q1A/presentation/folder"
 	"github.com/shinya-ac/server1Q1A/presentation/health_handler"
 	"github.com/shinya-ac/server1Q1A/presentation/settings"
@@ -17,10 +18,12 @@ import (
 
 func InitRoute(api *echo.Echo) {
 	api.Use(settings.ErrorHandler)
-	protectedV1 := api.Group("/v1")
-	folderRoute(protectedV1)
 
 	api.GET("/v1/health", health_handler.HealthCheck)
+
+	protectedV1 := api.Group("/v1")
+	protectedV1.Use(echo.WrapMiddleware(auth0.UseJWT))
+	folderRoute(protectedV1)
 	// api.GET("/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 

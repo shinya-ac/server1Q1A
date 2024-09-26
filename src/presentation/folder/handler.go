@@ -33,6 +33,7 @@ func NewHandler(
 
 func (h handler) CreateFolders(ctx echo.Context) error {
 	logging.Logger.Info("CreateFolder実行開始")
+
 	var params CreateFolderParams
 	err := ctx.Bind(&params)
 	if err != nil {
