@@ -52,6 +52,8 @@ func NewMainDB(cnf config.ConfigList) {
 }
 
 func connect(user string, password string, host string, port string, name string, caCertPath string) (*sql.DB, error) {
+	// DBをTiDBで動かす場合はtlsModeをtidbにする
+	tlsMode := config.Config.DBTLSMode
 	// CA証明書の読み込み
 	rootCertPool := x509.NewCertPool()
 	pem, err := os.ReadFile(caCertPath)
@@ -74,7 +76,12 @@ func connect(user string, password string, host string, port string, name string
 	}
 
 	for i := 0; i < maxRetries; i++ {
-		connect := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&tls=tidb", user, password, host, port, name)
+		var connect string
+		if tlsMode == "tidb" {
+			connect = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&tls=tidb", user, password, host, port, name)
+		} else {
+			connect = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, name)
+		}
 
 		db, err := sql.Open("mysql", connect)
 		if err != nil {

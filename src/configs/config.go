@@ -23,6 +23,7 @@ type ConfigList struct {
 	AuthDomain    string
 	AuthClientID  string
 	SigningMethod string
+	DBTLSMode     string
 }
 
 var Config ConfigList
@@ -60,6 +61,7 @@ func LoadConfig() (ConfigList, error) {
 		AuthDomain:    getEnv("AUTH_DOMAIN", getINIValue(cfg, "auth0", "auth_domain", "")),
 		AuthClientID:  getEnv("AUTH_CLIENT_ID", getINIValue(cfg, "auth0", "auth_client_id", "")),
 		SigningMethod: getEnv("JWT_SIGNING_METHOD", getINIValue(cfg, "auth0", "signing_method", "")),
+		DBTLSMode:     getEnv("DB_TLS_MODE", getINIValue(cfg, "db", "tls_mode", "")),
 	}
 
 	if Config.DBUser == "" {
@@ -103,6 +105,9 @@ func LoadConfig() (ConfigList, error) {
 	}
 	if Config.SigningMethod == "" {
 		missingConfig = append(missingConfig, "JWT_SIGNING_METHOD")
+	}
+	if Config.DBTLSMode == "" {
+		missingConfig = append(missingConfig, "DB_TLS_MODE")
 	}
 
 	if len(missingConfig) > 0 {
