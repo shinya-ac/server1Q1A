@@ -10,6 +10,8 @@ services:
     tty: false
     ports:
       - "8080:8080"
+    env_file:
+      - ./src/.env
     depends_on:
       - db
     networks:
