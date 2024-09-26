@@ -24,9 +24,9 @@ func (r *FolderRepository) Create(ctx context.Context, folder *folder.Folder) er
 		return err
 	}
 	logging.Logger.Info("Create実行", "folder:", *folder)
-	query := `INSERT INTO folders (id, title) VALUES(?, ?)`
+	query := `INSERT INTO folders (id, user_id, title, created_at, updated_at) VALUES(?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
 
-	_, err := r.db.ExecContext(ctx, query, folder.Id, folder.Title)
+	_, err := r.db.ExecContext(ctx, query, folder.Id, folder.UserId, folder.Title)
 	if err != nil {
 		logging.Logger.Error("SQL実行に失敗", "error", err)
 		return err

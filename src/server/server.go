@@ -8,7 +8,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	config "github.com/shinya-ac/server1Q1A/configs"
+	"github.com/shinya-ac/server1Q1A/middlewares/auth0"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 	"github.com/shinya-ac/server1Q1A/presentation/settings"
 	"github.com/shinya-ac/server1Q1A/server/route"
@@ -16,6 +18,19 @@ import (
 
 func Run(ctx context.Context, conf config.ConfigList) {
 	api := settings.NewEchoEngine()
+
+	jwks, err := auth0.FetchJWKS(conf.AuthDomain)
+	if err != nil {
+		logging.Logger.Error("JWTキー取得エラー", ":", err)
+	}
+
+	jwtMiddleware, err := auth0.NewMiddleware(conf.AuthDomain, conf.AuthClientID, jwks)
+	if err != nil {
+		logging.Logger.Error("jwtミドルウェア初期化エラー", ":", err)
+	}
+
+	api.Use(echo.WrapMiddleware(auth0.WithJWTMiddleware(jwtMiddleware)))
+
 	route.InitRoute(api)
 
 	address := conf.ServerAddress + ":" + conf.ServerPort

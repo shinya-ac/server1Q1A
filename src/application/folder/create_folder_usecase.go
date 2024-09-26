@@ -4,6 +4,7 @@ import (
 	"context"
 
 	folderDomain "github.com/shinya-ac/server1Q1A/domain/folder"
+	"github.com/shinya-ac/server1Q1A/pkg/auth"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 )
 
@@ -31,16 +32,24 @@ func (uc *CreateFolderUseCase) Run(
 	ctx context.Context,
 	dto CreateFolderUseCaseInputDto,
 ) (*CreateFolderUseCaseOutputDto, error) {
-	t, err := folderDomain.NewFolder(dto.Title)
+	sub, err := auth.GetUserIDFromContext(ctx)
 	if err != nil {
-		logging.Logger.Error("サーバーエラー", "error", err)
+		logging.Logger.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
+
+	t, err := folderDomain.NewFolder(dto.Title, sub)
+	if err != nil {
+		logging.Logger.Error("Failed to create new folder", "error", err)
+		return nil, err
+	}
+
 	err = uc.folderRepo.Create(ctx, t)
 	if err != nil {
-		logging.Logger.Error("サーバーエラー", "error", err)
+		logging.Logger.Error("Failed to create folder in repository", "error", err)
 		return nil, err
 	}
+
 	return &CreateFolderUseCaseOutputDto{
 		Id: t.GetId(),
 	}, nil
