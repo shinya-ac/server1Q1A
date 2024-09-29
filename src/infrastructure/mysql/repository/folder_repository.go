@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	errDomain "github.com/shinya-ac/server1Q1A/domain/error"
 	"github.com/shinya-ac/server1Q1A/domain/folder"
@@ -29,6 +30,32 @@ func (r *FolderRepository) Create(ctx context.Context, folder *folder.Folder) er
 	_, err := r.db.ExecContext(ctx, query, folder.Id, folder.UserId, folder.Title)
 	if err != nil {
 		logging.Logger.Error("SQL実行に失敗", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (r *FolderRepository) FindById(ctx context.Context, folderId string) (*folder.Folder, error) {
+	query := `SELECT id, user_id, title FROM folders WHERE id = ?`
+
+	row := r.db.QueryRowContext(ctx, query, folderId)
+	var f folder.Folder
+	err := row.Scan(&f.Id, &f.UserId, &f.Title)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("folderが見つかりません")
+		}
+		logging.Logger.Error("folderを取得できませんでした", "error", err)
+		return nil, err
+	}
+	return &f, nil
+}
+
+func (r *FolderRepository) Delete(ctx context.Context, folderId string) error {
+	query := `DELETE FROM folders WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, folderId)
+	if err != nil {
+		logging.Logger.Error("folderの削除に失敗しました", "error", err)
 		return err
 	}
 	return nil

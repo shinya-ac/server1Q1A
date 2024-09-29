@@ -11,13 +11,16 @@ import (
 
 type handler struct {
 	createFolderUseCase *folder.CreateFolderUseCase
+	deleteFolderUseCase *folder.DeleteFolderUseCase
 }
 
 func NewHandler(
 	createFolderUseCase *folder.CreateFolderUseCase,
+	deleteFolderUseCase *folder.DeleteFolderUseCase,
 ) handler {
 	return handler{
 		createFolderUseCase: createFolderUseCase,
+		deleteFolderUseCase: deleteFolderUseCase,
 	}
 }
 
@@ -64,4 +67,33 @@ func (h handler) CreateFolders(ctx echo.Context) error {
 		FolderId: dto.Id,
 	}
 	return settings.ReturnStatusCreated(ctx, response)
+}
+
+// CreateFolders godoc
+// @Summary Folderを削除する
+// @Description idを指定してFolderを削除する
+// @Tags Folder
+// @Accept json
+// @Produce json
+// @Param id path string true "フォルダーID"
+// @Success 204 {object} nil "フォルダーが正常に削除されました"
+// @Router /v1/folders/{id} [delete]
+
+func (h handler) DeleteFolder(ctx echo.Context) error {
+	logging.Logger.Info("DeleteFolder実行開始")
+
+	folderId := ctx.Param("id")
+
+	err := h.deleteFolderUseCase.Run(ctx.Request().Context(), folderId)
+	if err != nil {
+		if err.Error() == "folderが見つからない" {
+			return settings.ReturnNotFound(ctx, err)
+		}
+		if err.Error() == "folderを削除する権限がない" {
+			return settings.ReturnForbidden(ctx, err)
+		}
+		return settings.ReturnStatusInternalServerError(ctx, err)
+	}
+
+	return settings.ReturnStatusNoContent(ctx)
 }
