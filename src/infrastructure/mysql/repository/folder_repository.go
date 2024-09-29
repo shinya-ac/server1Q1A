@@ -60,3 +60,18 @@ func (r *FolderRepository) Delete(ctx context.Context, folderId string) error {
 	}
 	return nil
 }
+
+func (r *FolderRepository) Update(ctx context.Context, folder *folder.Folder) error {
+	if folder == nil {
+		logging.Logger.Error("Folderがnil")
+		err := errDomain.NewError("Folderがnilです。")
+		return err
+	}
+	query := `UPDATE folders SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, folder.Title, folder.Id)
+	if err != nil {
+		logging.Logger.Error("Folderの更新に失敗しました", "error", err)
+		return err
+	}
+	return nil
+}

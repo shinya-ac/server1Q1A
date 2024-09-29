@@ -38,7 +38,7 @@ func (uc *CreateFolderUseCase) Run(
 		return nil, err
 	}
 
-	t, err := folderDomain.NewFolder(dto.Title, sub)
+	t, err := folderDomain.NewFolder(sub, dto.Title)
 	if err != nil {
 		logging.Logger.Error("Failed to create new folder", "error", err)
 		return nil, err

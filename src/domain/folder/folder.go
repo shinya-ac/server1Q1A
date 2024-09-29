@@ -15,26 +15,27 @@ type Folder struct {
 	UserId string
 }
 
-func NewFolder(
-	Title string,
-	UserId string,
-) (*Folder, error) {
-	if utf8.RuneCountInString(Title) < titleLengthMin || utf8.RuneCountInString(Title) > titleLengthMax {
+func newFolder(id, title, userId string) (*Folder, error) {
+	if utf8.RuneCountInString(title) < titleLengthMin || utf8.RuneCountInString(title) > titleLengthMax {
 		err := errDomain.NewError("タイトルの値が不正です。")
 		logging.Logger.Error("タイトルの値が不正", "error", err)
 		return nil, err
 	}
-	id, err := uuid.NewRandom()
-	if err != nil {
-		logging.Logger.Error("UUIDの生成に失敗", "error", err)
-		return nil, err
-	}
 
 	return &Folder{
-		Id:     id.String(),
-		Title:  Title,
-		UserId: UserId,
+		Id:     id,
+		Title:  title,
+		UserId: userId,
 	}, nil
+}
+
+func NewFolder(userId, title string) (*Folder, error) {
+	id := uuid.New().String()
+	return newFolder(id, title, userId)
+}
+
+func ReconstructFolder(id, title, userId string) (*Folder, error) {
+	return newFolder(id, title, userId)
 }
 
 func (f *Folder) GetId() string {

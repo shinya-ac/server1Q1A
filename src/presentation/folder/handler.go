@@ -12,15 +12,18 @@ import (
 type handler struct {
 	createFolderUseCase *folder.CreateFolderUseCase
 	deleteFolderUseCase *folder.DeleteFolderUseCase
+	updateFolderUseCase *folder.UpdateFolderUseCase
 }
 
 func NewHandler(
 	createFolderUseCase *folder.CreateFolderUseCase,
 	deleteFolderUseCase *folder.DeleteFolderUseCase,
+	updateFolderUseCase *folder.UpdateFolderUseCase,
 ) handler {
 	return handler{
 		createFolderUseCase: createFolderUseCase,
 		deleteFolderUseCase: deleteFolderUseCase,
+		updateFolderUseCase: updateFolderUseCase,
 	}
 }
 
@@ -96,4 +99,53 @@ func (h handler) DeleteFolder(ctx echo.Context) error {
 	}
 
 	return settings.ReturnStatusNoContent(ctx)
+}
+
+// UpdateFolder godoc
+// @Summary Folderのタイトルを編集する
+// @Description Folder IDを指定してFolderのタイトルを編集する。Folderは自分が作成したものである必要がある。
+// @Tags Folder
+// @Accept json
+// @Produce json
+// @Param id path string true "Folder ID"
+// @Param title body string true "新しいFolderのタイトル"
+// @Success {object} map[string]string "Folderを更新しました"
+// @Router /folders/{id} [patch]
+
+func (h handler) UpdateFolder(ctx echo.Context) error {
+	folderID := ctx.Param("id")
+
+	var params UpdateFolderParams
+	err := ctx.Bind(&params)
+	if err != nil {
+		logging.Logger.Error("paramsの形式が不正", "error", err)
+		settings.ReturnBadRequest(ctx, err)
+		return err
+	}
+
+	validate := validator.GetValidator()
+	err = validate.Struct(params)
+	if err != nil {
+		logging.Logger.Error("paramsの内容が不正", "error", err)
+		settings.ReturnStatusBadRequest(ctx, err)
+		return err
+	}
+
+	input := folder.UpdateFolderUseCaseInputDto{
+		Id:    folderID,
+		Title: params.Title,
+	}
+
+	err = h.updateFolderUseCase.Run(ctx.Request().Context(), input)
+	if err != nil {
+		if err.Error() == "folderが見つかりません" {
+			return settings.ReturnNotFound(ctx, err)
+		}
+		if err.Error() == "folderを更新する権限がありません" {
+			return settings.ReturnForbidden(ctx, err)
+		}
+		return settings.ReturnStatusInternalServerError(ctx, err)
+	}
+
+	return settings.ReturnStatusOK(ctx, map[string]string{"message": "folderを更新しました"})
 }
