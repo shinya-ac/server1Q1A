@@ -5,10 +5,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	chatgptApp "github.com/shinya-ac/server1Q1A/application/chatgpt"
 	folderApp "github.com/shinya-ac/server1Q1A/application/folder"
+	"github.com/shinya-ac/server1Q1A/infrastructure/chatgpt"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/db"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/repository"
 	"github.com/shinya-ac/server1Q1A/middlewares/auth0"
+	chatgptPre "github.com/shinya-ac/server1Q1A/presentation/chatgpt"
 	folderPre "github.com/shinya-ac/server1Q1A/presentation/folder"
 	"github.com/shinya-ac/server1Q1A/presentation/health_handler"
 	"github.com/shinya-ac/server1Q1A/presentation/settings"
@@ -24,6 +27,7 @@ func InitRoute(api *echo.Echo) {
 	protectedV1 := api.Group("/v1")
 	protectedV1.Use(echo.WrapMiddleware(auth0.UseJWT))
 	folderRoute(protectedV1)
+	chatRoute(protectedV1)
 	// api.GET("/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
@@ -39,4 +43,13 @@ func folderRoute(r *echo.Group) {
 	group.POST("/", h.CreateFolders)
 	group.PATCH("/:id", h.UpdateFolder)
 	group.DELETE("/:id", h.DeleteFolder)
+}
+
+func chatRoute(r *echo.Group) {
+	ChatGPTRepository := chatgpt.NewChatGPTAPI()
+	chatgptUsecase := chatgptApp.NewChatGPTUseCase(ChatGPTRepository)
+	chatHandler := chatgptPre.NewHandler(chatgptUsecase)
+
+	group := r.Group("/gpt")
+	group.POST("/image", chatHandler.Ocr)
 }

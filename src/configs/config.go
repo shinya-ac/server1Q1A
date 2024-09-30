@@ -24,6 +24,7 @@ type ConfigList struct {
 	AuthClientID  string
 	SigningMethod string
 	DBTLSMode     string
+	ChatGptApiKey string
 }
 
 var Config ConfigList
@@ -62,6 +63,7 @@ func LoadConfig() (ConfigList, error) {
 		AuthClientID:  getEnv("AUTH_CLIENT_ID", getINIValue(cfg, "auth0", "auth_client_id", "")),
 		SigningMethod: getEnv("JWT_SIGNING_METHOD", getINIValue(cfg, "auth0", "signing_method", "")),
 		DBTLSMode:     getEnv("DB_TLS_MODE", getINIValue(cfg, "db", "tls_mode", "")),
+		ChatGptApiKey: getEnv("CHAT_GPT_API_KEY", getINIValue(cfg, "chatgpt", "api_key", "")),
 	}
 
 	if Config.DBUser == "" {
@@ -108,6 +110,9 @@ func LoadConfig() (ConfigList, error) {
 	}
 	if Config.DBTLSMode == "" {
 		missingConfig = append(missingConfig, "DB_TLS_MODE")
+	}
+	if Config.ChatGptApiKey == "" {
+		missingConfig = append(missingConfig, "CHAT_GPT_API_KEY")
 	}
 
 	if len(missingConfig) > 0 {
