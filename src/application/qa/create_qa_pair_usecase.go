@@ -32,20 +32,27 @@ func (uc *CreateQaPairUseCase) Run(ctx context.Context, folderId string, qaPairs
 		logging.Logger.Error("userIdの取得に失敗", "error", err)
 		return err
 	}
+	var questions []*questionDomain.Question
+	var answers []*answerDomain.Answer
 	for _, qa := range qaPairs {
 		question := questionDomain.NewQuestion(sub, folderId, qa.Question)
-		err := uc.questionRepo.Create(ctx, question)
-		if err != nil {
-			logging.Logger.Error("question作成失敗", "error", err)
-			return err
-		}
+		questions = append(questions, question)
 
 		answer := answerDomain.NewAnswer(sub, question.Id, folderId, qa.Answer)
-		err = uc.answerRepo.Create(ctx, answer)
-		if err != nil {
-			logging.Logger.Error("answer作成失敗", "error", err)
-			return err
-		}
+		answers = append(answers, answer)
 	}
+
+	err = uc.questionRepo.BulkCreate(ctx, questions)
+	if err != nil {
+		logging.Logger.Error("questionsのバルク作成失敗", "error", err)
+		return err
+	}
+
+	err = uc.answerRepo.BulkCreate(ctx, answers)
+	if err != nil {
+		logging.Logger.Error("answersのバルク作成失敗", "error", err)
+		return err
+	}
+
 	return nil
 }
