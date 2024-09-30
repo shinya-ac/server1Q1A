@@ -7,6 +7,7 @@ import (
 
 	chatgptApp "github.com/shinya-ac/server1Q1A/application/chatgpt"
 	folderApp "github.com/shinya-ac/server1Q1A/application/folder"
+	qaApp "github.com/shinya-ac/server1Q1A/application/qa"
 	"github.com/shinya-ac/server1Q1A/infrastructure/chatgpt"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/db"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/repository"
@@ -14,6 +15,7 @@ import (
 	chatgptPre "github.com/shinya-ac/server1Q1A/presentation/chatgpt"
 	folderPre "github.com/shinya-ac/server1Q1A/presentation/folder"
 	"github.com/shinya-ac/server1Q1A/presentation/health_handler"
+	qaPre "github.com/shinya-ac/server1Q1A/presentation/qa"
 	"github.com/shinya-ac/server1Q1A/presentation/settings"
 	// swaggerFiles "github.com/swaggo/files"
 	// ginSwagger "github.com/swaggo/gin-swagger"
@@ -28,6 +30,7 @@ func InitRoute(api *echo.Echo) {
 	protectedV1.Use(echo.WrapMiddleware(auth0.UseJWT))
 	folderRoute(protectedV1)
 	chatRoute(protectedV1)
+	qaRoute(protectedV1)
 	// api.GET("/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
@@ -52,4 +55,14 @@ func chatRoute(r *echo.Group) {
 
 	group := r.Group("/gpt")
 	group.POST("/image", chatHandler.Ocr)
+}
+
+func qaRoute(r *echo.Group) {
+	questionRepository := repository.NewMySQLQuestionRepository(db.GetDB())
+	answerRepository := repository.NewMySQLAnswerRepository(db.GetDB())
+	createQaUseCase := qaApp.NewCreateQaPairUseCase(questionRepository, answerRepository)
+	qaHandler := qaPre.NewHandler(createQaUseCase)
+
+	group := r.Group("/folders/:folder_id/qa")
+	group.POST("/", qaHandler.CreateQaPairs)
 }
