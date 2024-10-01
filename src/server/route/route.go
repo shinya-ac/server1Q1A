@@ -60,7 +60,8 @@ func chatRoute(r *echo.Group) {
 func qaRoute(r *echo.Group) {
 	questionRepository := repository.NewMySQLQuestionRepository(db.GetDB())
 	answerRepository := repository.NewMySQLAnswerRepository(db.GetDB())
-	createQaUseCase := qaApp.NewCreateQaPairUseCase(questionRepository, answerRepository)
+	transactionManager := repository.NewTransactionManager()
+	createQaUseCase := qaApp.NewCreateQaPairUseCase(questionRepository, answerRepository, transactionManager)
 	qaHandler := qaPre.NewHandler(createQaUseCase)
 
 	group := r.Group("/folders/:folder_id/qa")
