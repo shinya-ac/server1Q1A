@@ -40,9 +40,11 @@ func folderRoute(r *echo.Group) {
 	cuc := folderApp.NewCreateFolderUseCase(folderRepository)
 	duc := folderApp.NewDeleteFolderUseCase(folderRepository)
 	uuc := folderApp.NewUpdateFolderUseCase(folderRepository)
-	h := folderPre.NewHandler(cuc, duc, uuc)
+	ruc := folderApp.NewReadFoldersUseCase(folderRepository)
+	h := folderPre.NewHandler(cuc, duc, uuc, ruc)
 
 	group := r.Group("/folders")
+	group.GET("/", h.ReadFolders)
 	group.POST("/", h.CreateFolders)
 	group.PATCH("/:id", h.UpdateFolder)
 	group.DELETE("/:id", h.DeleteFolder)

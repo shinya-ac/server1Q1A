@@ -9,4 +9,5 @@ type FolderRepository interface {
 	FindById(ctx context.Context, id string) (*Folder, error)
 	Delete(ctx context.Context, folderId string) error
 	Update(ctx context.Context, folder *Folder) error
+	GetFoldersByUserId(ctx context.Context, userId string) ([]*Folder, error)
 }

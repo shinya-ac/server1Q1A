@@ -13,17 +13,20 @@ type handler struct {
 	createFolderUseCase *folder.CreateFolderUseCase
 	deleteFolderUseCase *folder.DeleteFolderUseCase
 	updateFolderUseCase *folder.UpdateFolderUseCase
+	readFoldersUseCase  *folder.ReadFoldersUseCase
 }
 
 func NewHandler(
 	createFolderUseCase *folder.CreateFolderUseCase,
 	deleteFolderUseCase *folder.DeleteFolderUseCase,
 	updateFolderUseCase *folder.UpdateFolderUseCase,
+	readFoldersUseCase *folder.ReadFoldersUseCase,
 ) handler {
 	return handler{
 		createFolderUseCase: createFolderUseCase,
 		deleteFolderUseCase: deleteFolderUseCase,
 		updateFolderUseCase: updateFolderUseCase,
+		readFoldersUseCase:  readFoldersUseCase,
 	}
 }
 
@@ -148,4 +151,23 @@ func (h handler) UpdateFolder(ctx echo.Context) error {
 	}
 
 	return settings.ReturnStatusOK(ctx, map[string]string{"message": "folderを更新しました"})
+}
+
+// GetFolders godoc
+// @Summary Folder一覧の取得
+// @Description ログインユーザーが作成したFolderの一覧を取得します。
+// @Tags Folder
+// @Accept json
+// @Produce json
+// @Success 200 {array} folder.Folder
+// @Router /folders [get]
+// @Security BearerAuth
+
+func (h *handler) ReadFolders(ctx echo.Context) error {
+	folders, err := h.readFoldersUseCase.Run(ctx.Request().Context())
+	if err != nil {
+		return settings.ReturnStatusInternalServerError(ctx, err)
+	}
+
+	return settings.ReturnStatusOK(ctx, folders)
 }

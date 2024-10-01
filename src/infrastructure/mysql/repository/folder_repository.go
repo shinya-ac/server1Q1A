@@ -75,3 +75,31 @@ func (r *FolderRepository) Update(ctx context.Context, folder *folder.Folder) er
 	}
 	return nil
 }
+
+func (r *FolderRepository) GetFoldersByUserId(ctx context.Context, userId string) ([]*folder.Folder, error) {
+	var folders []*folder.Folder
+	query := "SELECT id, title, user_id FROM folders WHERE user_id = ?"
+
+	rows, err := r.db.QueryContext(ctx, query, userId)
+	if err != nil {
+		logging.Logger.Error("フォルダー一覧取得中にエラーが発生", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var f folder.Folder
+		if err := rows.Scan(&f.Id, &f.Title, &f.UserId); err != nil {
+			logging.Logger.Error("フォルダーの読み込みに失敗", "error", err)
+			return nil, err
+		}
+		folders = append(folders, &f)
+	}
+
+	if err = rows.Err(); err != nil {
+		logging.Logger.Error("フォルダー一覧の取得完了中にエラーが発生", "error", err)
+		return nil, err
+	}
+
+	return folders, nil
+}
