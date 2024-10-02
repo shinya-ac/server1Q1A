@@ -64,8 +64,10 @@ func qaRoute(r *echo.Group) {
 	answerRepository := repository.NewMySQLAnswerRepository(db.GetDB())
 	transactionManager := repository.NewTransactionManager()
 	createQaUseCase := qaApp.NewCreateQaPairUseCase(questionRepository, answerRepository, transactionManager)
-	qaHandler := qaPre.NewHandler(createQaUseCase)
+	getQaUseCase := qaApp.NewGetQaPairsUseCase(questionRepository, answerRepository)
+	qaHandler := qaPre.NewHandler(createQaUseCase, getQaUseCase)
 
 	group := r.Group("/folders/:folder_id/qa")
 	group.POST("/", qaHandler.CreateQaPairs)
+	group.GET("/", qaHandler.GetQaPairs)
 }

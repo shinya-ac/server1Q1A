@@ -58,3 +58,47 @@ func (r *MySQLAnswerRepository) BulkCreate(ctx context.Context, answers []*answe
 
 	return nil
 }
+
+func (r *MySQLAnswerRepository) GetAnswersByQuestionIds(ctx context.Context, questionIds []string) ([]*answerDomain.Answer, error) {
+	var answers []*answerDomain.Answer
+
+	placeholders := make([]string, len(questionIds))
+	args := make([]interface{}, len(questionIds))
+	for i, id := range questionIds {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := "SELECT id, user_id, question_id, folder_id, content, created_at, updated_at FROM answers WHERE question_id IN (" + strings.Join(placeholders, ",") + ")"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		logging.Logger.Error("解答取得中にエラーが発生", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var a answerDomain.Answer
+		var createdAt, updatedAt []byte
+
+		if err := rows.Scan(&a.Id, &a.UserId, &a.QuestionId, &a.FolderId, &a.Content, &createdAt, &updatedAt); err != nil {
+			logging.Logger.Error("解答の読み込みに失敗", "error", err)
+			return nil, err
+		}
+
+		if err := a.ParseTimeFields(createdAt, updatedAt); err != nil {
+			logging.Logger.Error("日時フィールドのパースに失敗", "error", err)
+			return nil, err
+		}
+
+		answers = append(answers, &a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logging.Logger.Error("解答の取得完了中にエラーが発生", "error", err)
+		return nil, err
+	}
+
+	return answers, nil
+}

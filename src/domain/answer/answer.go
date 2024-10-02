@@ -1,6 +1,7 @@
 package answer
 
 import (
+	"fmt"
 	"time"
 	"unicode/utf8"
 
@@ -40,3 +41,22 @@ func NewAnswer(userId, questionId, folderId, content string) (*Answer, error) {
 const (
 	titleLengthMin = 1
 )
+
+func (q *Answer) ParseTimeFields(createdAt, updatedAt []byte) error {
+	var err error
+	q.CreatedAt, err = parseTime(createdAt)
+	if err != nil {
+		return fmt.Errorf("created_atのパースに失敗: %w", err)
+	}
+
+	q.UpdatedAt, err = parseTime(updatedAt)
+	if err != nil {
+		return fmt.Errorf("updated_atのパースに失敗: %w", err)
+	}
+
+	return nil
+}
+
+func parseTime(t []byte) (time.Time, error) {
+	return time.Parse("2006-01-02 15:04:05", string(t))
+}
