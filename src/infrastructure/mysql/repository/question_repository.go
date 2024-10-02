@@ -53,3 +53,39 @@ func (r *MySQLQuestionRepository) BulkCreate(ctx context.Context, questions []*q
 
 	return nil
 }
+
+func (r *MySQLQuestionRepository) GetQuestionsByFolderId(ctx context.Context, folderId string) ([]*questionDomain.Question, error) {
+	var questions []*questionDomain.Question
+	query := "SELECT id, user_id, folder_id, content, created_at, updated_at FROM questions WHERE folder_id = ?"
+
+	rows, err := r.db.QueryContext(ctx, query, folderId)
+	if err != nil {
+		logging.Logger.Error("質問取得中にエラーが発生", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var q questionDomain.Question
+		var createdAt, updatedAt []byte
+
+		if err := rows.Scan(&q.Id, &q.UserId, &q.FolderId, &q.Content, &createdAt, &updatedAt); err != nil {
+			logging.Logger.Error("質問の読み込みに失敗", "error", err)
+			return nil, err
+		}
+
+		if err := q.ParseTimeFields(createdAt, updatedAt); err != nil {
+			logging.Logger.Error("日時フィールドのパースに失敗", "error", err)
+			return nil, err
+		}
+
+		questions = append(questions, &q)
+	}
+
+	if err = rows.Err(); err != nil {
+		logging.Logger.Error("質問の取得完了中にエラーが発生", "error", err)
+		return nil, err
+	}
+
+	return questions, nil
+}
