@@ -7,27 +7,28 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
+	chatgpt "github.com/shinya-ac/server1Q1A/application/chatgpt"
 	config "github.com/shinya-ac/server1Q1A/configs"
-	chatgpt "github.com/shinya-ac/server1Q1A/domain/chatgpt"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 )
 
 const apiUrl = "https://api.openai.com/v1/chat/completions"
 
-type ChatGPTRepository struct {
+type ChatGPTClient struct {
 	apiKey string
 }
 
-func NewChatGPTAPI() chatgpt.ChatGPTRepository {
+func NewChatGPTAPI() *ChatGPTClient {
 	chatgptApiKey := config.Config.ChatGptApiKey
-	return &ChatGPTRepository{
+	return &ChatGPTClient{
 		apiKey: chatgptApiKey,
 	}
 }
 
-func (client *ChatGPTRepository) Ocr(ctx context.Context, imageURL string) (string, error) {
+func (client *ChatGPTClient) Ocr(ctx context.Context, imageURL string) (string, error) {
 	logging.Logger.Info("Ocr 実行開始", "imageURL", imageURL)
 	reqBody := map[string]interface{}{
 		"model": "gpt-4o",
@@ -104,6 +105,98 @@ func (client *ChatGPTRepository) Ocr(ctx context.Context, imageURL string) (stri
 	if len(result.Choices) > 0 {
 		return result.Choices[0].Message.Content, nil
 	}
-	logging.Logger.Error("OpenAIからのレスポンスがありません")
-	return "", fmt.Errorf("OpenAIからのレスポンスがありません")
+	logging.Logger.Error("ChatGPTからのレスポンスがありません")
+	return "", fmt.Errorf("ChatGPTからのレスポンスがありません")
+}
+
+func (client *ChatGPTClient) GenerateQas(ctx context.Context, content string) ([]*chatgpt.Qas, error) {
+	reqBody := map[string]interface{}{
+		"model": "gpt-4",
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{"type": "text", "text": "上記の文章から一問一答を５つ作成してください。質問は「Q.」、解答は「A.」で始めてください。"},
+					{"type": "text", "text": content},
+				},
+			},
+		},
+		"max_tokens": 4000,
+	}
+
+	reqBodyJSON, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("リクエストボディの作成に失敗しました: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(reqBodyJSON))
+	if err != nil {
+		return nil, fmt.Errorf("リクエストの作成に失敗しました: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+client.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("リクエストの送信に失敗しました: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("ChatGPT APIからの予期しないレスポンス: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("レスポンスのデコードに失敗しました: %w", err)
+	}
+
+	if len(result.Choices) == 0 {
+		return nil, fmt.Errorf("ChatGPTから有効な回答がありません")
+	}
+
+	qas, err := parseQas(result.Choices[0].Message.Content)
+	if err != nil {
+		return nil, fmt.Errorf("QAペアの解析に失敗しました: %w", err)
+	}
+
+	return qas, nil
+}
+
+func parseQas(content string) ([]*chatgpt.Qas, error) {
+	var qas []*chatgpt.Qas
+	var questions []string
+	var answers []string
+
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "Q.") {
+			questions = append(questions, strings.TrimSpace(line))
+		} else if strings.HasPrefix(line, "A.") {
+			answers = append(answers, strings.TrimSpace(line))
+		}
+	}
+
+	if len(questions) != len(answers) {
+		return nil, fmt.Errorf("質問と回答の数が一致しません")
+	}
+
+	qas = make([]*chatgpt.Qas, len(questions))
+	for i := range questions {
+		qas[i] = &chatgpt.Qas{
+			Question: questions[i],
+			Answer:   answers[i],
+		}
+	}
+
+	return qas, nil
 }

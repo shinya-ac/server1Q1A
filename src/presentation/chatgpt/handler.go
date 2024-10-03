@@ -10,14 +10,17 @@ import (
 )
 
 type handler struct {
-	ocrUseCase *chatgpt.OcrUseCase
+	ocrUseCase         *chatgpt.OcrUseCase
+	generateQasUseCase *chatgpt.GenerateQasUseCase
 }
 
 func NewHandler(
 	ocrUseCase *chatgpt.OcrUseCase,
+	generateQasUseCase *chatgpt.GenerateQasUseCase,
 ) handler {
 	return handler{
-		ocrUseCase: ocrUseCase,
+		ocrUseCase:         ocrUseCase,
+		generateQasUseCase: generateQasUseCase,
 	}
 }
 
@@ -51,4 +54,38 @@ func (h handler) Ocr(ctx echo.Context) error {
 	}
 
 	return settings.ReturnStatusOK(ctx, map[string]string{"response": response})
+}
+
+func (h handler) GenerateQas(ctx echo.Context) error {
+	var params generateQasParams
+
+	err := ctx.Bind(&params)
+	if err != nil {
+		logging.Logger.Error("paramsの形式が不正", "error", err)
+		settings.ReturnBadRequest(ctx, err)
+		return err
+	}
+
+	qas, err := h.generateQasUseCase.Run(ctx.Request().Context(), params.Content)
+	if err != nil {
+		return settings.ReturnStatusInternalServerError(ctx, err)
+	}
+
+	response := mapQasToResponse(qas)
+	return settings.ReturnStatusCreated(ctx, response)
+}
+
+func mapQasToResponse(qas []*chatgpt.Qas) generateQasResponse {
+	questions := []string{}
+	answers := []string{}
+
+	for _, qa := range qas {
+		questions = append(questions, qa.Question)
+		answers = append(answers, qa.Answer)
+	}
+
+	return generateQasResponse{
+		Questions: questions,
+		Answers:   answers,
+	}
 }
