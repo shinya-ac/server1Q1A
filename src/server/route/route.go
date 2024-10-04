@@ -51,12 +51,14 @@ func folderRoute(r *echo.Group) {
 }
 
 func chatRoute(r *echo.Group) {
-	ChatGPTRepository := chatgpt.NewChatGPTAPI()
+	ChatGPTRepository := chatgpt.NewChatGptClient()
 	chatgptUsecase := chatgptApp.NewChatGPTUseCase(ChatGPTRepository)
-	chatHandler := chatgptPre.NewHandler(chatgptUsecase)
+	generateQasuseCase := chatgptApp.NewGenerateQasUseCase(ChatGPTRepository)
+	chatHandler := chatgptPre.NewHandler(chatgptUsecase, generateQasuseCase)
 
 	group := r.Group("/gpt")
 	group.POST("/image", chatHandler.Ocr)
+	group.POST("/qas", chatHandler.GenerateQas)
 }
 
 func qaRoute(r *echo.Group) {

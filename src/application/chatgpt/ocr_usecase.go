@@ -3,22 +3,21 @@ package chatgpt
 import (
 	"context"
 
-	"github.com/shinya-ac/server1Q1A/domain/chatgpt"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 )
 
 type OcrUseCase struct {
-	repository chatgpt.ChatGPTRepository
+	chatGptClient ChatGptClient
 }
 
-func NewChatGPTUseCase(repo chatgpt.ChatGPTRepository) *OcrUseCase {
+func NewChatGPTUseCase(client ChatGptClient) *OcrUseCase {
 	return &OcrUseCase{
-		repository: repo,
+		chatGptClient: client,
 	}
 }
 
 func (uc *OcrUseCase) HandleImageAnalysis(ctx context.Context, imageURL string) (string, error) {
-	response, err := uc.repository.Ocr(ctx, imageURL)
+	response, err := uc.chatGptClient.Ocr(ctx, imageURL)
 	if err != nil {
 		return "", err
 	}
