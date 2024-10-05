@@ -78,7 +78,8 @@ func connect(user string, password string, host string, port string, name string
 	for i := 0; i < maxRetries; i++ {
 		var connect string
 		if tlsMode == "tidb" {
-			connect = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&tls=tidb", user, password, host, port, name)
+			logging.Logger.Info("TiDB")
+			connect = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=tidb", user, password, host, port, name)
 		} else {
 			connect = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, name)
 		}
