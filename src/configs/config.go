@@ -9,24 +9,25 @@ import (
 )
 
 type ConfigList struct {
-	DBUser               string
-	DBPassword           string
-	DBHost               string
-	DBPort               string
-	DBName               string
-	CACertPath           string
-	ServerAddress        string
-	ServerPort           string
-	APIKey1              string
-	APIKey2              string
-	APIKey3              string
-	AuthDomain           string
-	AuthClientID         string
-	SigningMethod        string
-	DBTLSMode            string
-	ChatGptApiKey        string
-	MicrocmsApiKey       string
-	MicrocmsOcrContentID string
+	DBUser                       string
+	DBPassword                   string
+	DBHost                       string
+	DBPort                       string
+	DBName                       string
+	CACertPath                   string
+	ServerAddress                string
+	ServerPort                   string
+	APIKey1                      string
+	APIKey2                      string
+	APIKey3                      string
+	AuthDomain                   string
+	AuthClientID                 string
+	SigningMethod                string
+	DBTLSMode                    string
+	ChatGptApiKey                string
+	MicrocmsApiKey               string
+	MicrocmsOcrContentID         string
+	MicrocmsGenerateQAsContentID string
 }
 
 var Config ConfigList
@@ -50,24 +51,25 @@ func LoadConfig() (ConfigList, error) {
 	missingConfig := []string{}
 
 	Config = ConfigList{
-		DBUser:               getEnv("DB_USER", getINIValue(cfg, "db", "user", "")),
-		DBPassword:           getEnv("DB_PASSWORD", getINIValue(cfg, "db", "password", "")),
-		DBHost:               getEnv("DB_HOST", getINIValue(cfg, "db", "host", "")),
-		DBPort:               getEnv("DB_PORT", getINIValue(cfg, "db", "port", "")),
-		DBName:               getEnv("DB_NAME", getINIValue(cfg, "db", "name", "")),
-		CACertPath:           getEnv("CA_CERT_PATH", getINIValue(cfg, "db", "ca_cert_path", "")),
-		ServerAddress:        getEnv("SERVER_ADDRESS", getINIValue(cfg, "server", "address", "")),
-		ServerPort:           getEnv("SERVER_PORT", getINIValue(cfg, "server", "port", "")),
-		APIKey1:              getEnv("API_KEY1", getINIValue(cfg, "api", "key1", "")),
-		APIKey2:              getEnv("API_KEY2", getINIValue(cfg, "api", "key2", "")),
-		APIKey3:              getEnv("API_KEY3", getINIValue(cfg, "api", "key3", "")),
-		AuthDomain:           getEnv("AUTH_DOMAIN", getINIValue(cfg, "auth0", "auth_domain", "")),
-		AuthClientID:         getEnv("AUTH_CLIENT_ID", getINIValue(cfg, "auth0", "auth_client_id", "")),
-		SigningMethod:        getEnv("JWT_SIGNING_METHOD", getINIValue(cfg, "auth0", "signing_method", "")),
-		DBTLSMode:            getEnv("DB_TLS_MODE", getINIValue(cfg, "db", "tls_mode", "")),
-		ChatGptApiKey:        getEnv("CHAT_GPT_API_KEY", getINIValue(cfg, "chatgpt", "api_key", "")),
-		MicrocmsApiKey:       getEnv("MICROCMS_API_KEY", getINIValue(cfg, "microcms", "api_key", "")),
-		MicrocmsOcrContentID: getEnv("MICROCMS_OCR_CONTENT_ID", getINIValue(cfg, "microcms", "ocr_content_id", "")),
+		DBUser:                       getEnv("DB_USER", getINIValue(cfg, "db", "user", "")),
+		DBPassword:                   getEnv("DB_PASSWORD", getINIValue(cfg, "db", "password", "")),
+		DBHost:                       getEnv("DB_HOST", getINIValue(cfg, "db", "host", "")),
+		DBPort:                       getEnv("DB_PORT", getINIValue(cfg, "db", "port", "")),
+		DBName:                       getEnv("DB_NAME", getINIValue(cfg, "db", "name", "")),
+		CACertPath:                   getEnv("CA_CERT_PATH", getINIValue(cfg, "db", "ca_cert_path", "")),
+		ServerAddress:                getEnv("SERVER_ADDRESS", getINIValue(cfg, "server", "address", "")),
+		ServerPort:                   getEnv("SERVER_PORT", getINIValue(cfg, "server", "port", "")),
+		APIKey1:                      getEnv("API_KEY1", getINIValue(cfg, "api", "key1", "")),
+		APIKey2:                      getEnv("API_KEY2", getINIValue(cfg, "api", "key2", "")),
+		APIKey3:                      getEnv("API_KEY3", getINIValue(cfg, "api", "key3", "")),
+		AuthDomain:                   getEnv("AUTH_DOMAIN", getINIValue(cfg, "auth0", "auth_domain", "")),
+		AuthClientID:                 getEnv("AUTH_CLIENT_ID", getINIValue(cfg, "auth0", "auth_client_id", "")),
+		SigningMethod:                getEnv("JWT_SIGNING_METHOD", getINIValue(cfg, "auth0", "signing_method", "")),
+		DBTLSMode:                    getEnv("DB_TLS_MODE", getINIValue(cfg, "db", "tls_mode", "")),
+		ChatGptApiKey:                getEnv("CHAT_GPT_API_KEY", getINIValue(cfg, "chatgpt", "api_key", "")),
+		MicrocmsApiKey:               getEnv("MICROCMS_API_KEY", getINIValue(cfg, "microcms", "api_key", "")),
+		MicrocmsOcrContentID:         getEnv("MICROCMS_OCR_CONTENT_ID", getINIValue(cfg, "microcms", "ocr_content_id", "")),
+		MicrocmsGenerateQAsContentID: getEnv("MICROCMS_GENERATE_QAS_CONTENT_ID", getINIValue(cfg, "microcms", "generate_qas_content_id", "")),
 	}
 
 	if Config.DBUser == "" {
@@ -123,6 +125,9 @@ func LoadConfig() (ConfigList, error) {
 	}
 	if Config.MicrocmsOcrContentID == "" {
 		missingConfig = append(missingConfig, "MICROCMS_OCR_CONTENT_ID")
+	}
+	if Config.MicrocmsGenerateQAsContentID == "" {
+		missingConfig = append(missingConfig, "MICROCMS_GENERATE_QAS_CONTENT_ID")
 	}
 
 	if len(missingConfig) > 0 {

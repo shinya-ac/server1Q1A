@@ -136,8 +136,16 @@ func (client *ChatGptClient) Ocr(ctx context.Context, imageURL string, contentID
 	return content, nil
 }
 
-func (client *ChatGptClient) GenerateQas(ctx context.Context, content string) ([]*appChatGPT.Qas, error) {
+func (client *ChatGptClient) GenerateQas(ctx context.Context, content, microcmsContentID string) ([]*appChatGPT.Qas, error) {
 	logging.Logger.Info("GenerateQas 実行開始")
+
+	prompt, err := client.microcmsClient.GetPrompt(microcmsContentID)
+	if err != nil {
+		return nil, fmt.Errorf("プロンプトの取得に失敗しました: %w", err)
+	}
+	if prompt == "" {
+		return nil, fmt.Errorf("プロンプトが空です")
+	}
 
 	reqBody := map[string]interface{}{
 		"model": modelName,
@@ -147,7 +155,7 @@ func (client *ChatGptClient) GenerateQas(ctx context.Context, content string) ([
 				"content": []map[string]interface{}{
 					{
 						"type": "text",
-						"text": "上記の文章から一問一答を５つ作成してください。質問は「Q.」、解答は「A.」で始めてください。",
+						"text": prompt,
 					},
 					{
 						"type": "text",
