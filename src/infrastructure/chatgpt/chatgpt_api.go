@@ -10,6 +10,7 @@ import (
 	"time"
 
 	appChatGPT "github.com/shinya-ac/server1Q1A/application/chatgpt"
+	"github.com/shinya-ac/server1Q1A/application/microcms"
 	config "github.com/shinya-ac/server1Q1A/configs"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 )
@@ -20,15 +21,17 @@ const (
 )
 
 type ChatGptClient struct {
-	apiKey     string
-	httpClient *http.Client
+	apiKey         string
+	httpClient     *http.Client
+	microcmsClient microcms.MicrocmsClient
 }
 
-func NewChatGptClient() *ChatGptClient {
+func NewChatGptClient(microcmsClient microcms.MicrocmsClient) *ChatGptClient {
 	chatgptApiKey := config.Config.ChatGptApiKey
 	return &ChatGptClient{
-		apiKey:     chatgptApiKey,
-		httpClient: &http.Client{Timeout: 50 * time.Second},
+		apiKey:         chatgptApiKey,
+		httpClient:     &http.Client{Timeout: 50 * time.Second},
+		microcmsClient: microcmsClient,
 	}
 }
 
@@ -87,8 +90,16 @@ func (client *ChatGptClient) sendRequest(ctx context.Context, reqBody map[string
 	return &result, nil
 }
 
-func (client *ChatGptClient) Ocr(ctx context.Context, imageURL string) (string, error) {
+func (client *ChatGptClient) Ocr(ctx context.Context, imageURL string, contentID string) (string, error) {
 	logging.Logger.Info("Ocr 実行開始", "imageURL", imageURL)
+
+	prompt, err := client.microcmsClient.GetPrompt(contentID)
+	if err != nil {
+		return "", fmt.Errorf("プロンプトの取得に失敗しました: %w", err)
+	}
+	if prompt == "" {
+		return "", fmt.Errorf("プロンプトが空です")
+	}
 
 	reqBody := map[string]interface{}{
 		"model": modelName,
@@ -98,7 +109,7 @@ func (client *ChatGptClient) Ocr(ctx context.Context, imageURL string) (string, 
 				"content": []map[string]interface{}{
 					{
 						"type": "text",
-						"text": "画像からテキストを抽出してください。すなわちOCRを行なって欲しいということです。文字は縦読みの可能性も横読みの可能性もあります。よく観察して抽出してください。",
+						"text": prompt,
 					},
 					{
 						"type": "image_url",
@@ -125,8 +136,16 @@ func (client *ChatGptClient) Ocr(ctx context.Context, imageURL string) (string, 
 	return content, nil
 }
 
-func (client *ChatGptClient) GenerateQas(ctx context.Context, content string) ([]*appChatGPT.Qas, error) {
+func (client *ChatGptClient) GenerateQas(ctx context.Context, content, microcmsContentID string) ([]*appChatGPT.Qas, error) {
 	logging.Logger.Info("GenerateQas 実行開始")
+
+	prompt, err := client.microcmsClient.GetPrompt(microcmsContentID)
+	if err != nil {
+		return nil, fmt.Errorf("プロンプトの取得に失敗しました: %w", err)
+	}
+	if prompt == "" {
+		return nil, fmt.Errorf("プロンプトが空です")
+	}
 
 	reqBody := map[string]interface{}{
 		"model": modelName,
@@ -136,7 +155,7 @@ func (client *ChatGptClient) GenerateQas(ctx context.Context, content string) ([
 				"content": []map[string]interface{}{
 					{
 						"type": "text",
-						"text": "上記の文章から一問一答を５つ作成してください。質問は「Q.」、解答は「A.」で始めてください。",
+						"text": prompt,
 					},
 					{
 						"type": "text",

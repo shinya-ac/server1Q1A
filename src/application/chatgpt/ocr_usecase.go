@@ -3,6 +3,7 @@ package chatgpt
 import (
 	"context"
 
+	config "github.com/shinya-ac/server1Q1A/configs"
 	"github.com/shinya-ac/server1Q1A/pkg/logging"
 )
 
@@ -16,8 +17,9 @@ func NewChatGPTUseCase(client ChatGptClient) *OcrUseCase {
 	}
 }
 
-func (uc *OcrUseCase) HandleImageAnalysis(ctx context.Context, imageURL string) (string, error) {
-	response, err := uc.chatGptClient.Ocr(ctx, imageURL)
+func (uc *OcrUseCase) HandleOcr(ctx context.Context, imageURL string) (string, error) {
+	OcrContentID := config.Config.MicrocmsOcrContentID
+	response, err := uc.chatGptClient.Ocr(ctx, imageURL, OcrContentID)
 	if err != nil {
 		return "", err
 	}

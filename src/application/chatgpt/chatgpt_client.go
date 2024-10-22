@@ -8,6 +8,6 @@ type Qas struct {
 }
 
 type ChatGptClient interface {
-	GenerateQas(ctx context.Context, content string) ([]*Qas, error)
-	Ocr(ctx context.Context, imageURL string) (string, error)
+	GenerateQas(ctx context.Context, content, microcmsContentID string) ([]*Qas, error)
+	Ocr(ctx context.Context, imageURL string, microcmsContentID string) (string, error)
 }

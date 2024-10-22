@@ -2,6 +2,8 @@ package chatgpt
 
 import (
 	"context"
+
+	config "github.com/shinya-ac/server1Q1A/configs"
 )
 
 type GenerateQasUseCase struct {
@@ -15,5 +17,10 @@ func NewGenerateQasUseCase(client ChatGptClient) *GenerateQasUseCase {
 }
 
 func (uc *GenerateQasUseCase) Run(ctx context.Context, content string) ([]*Qas, error) {
-	return uc.chatGptClient.GenerateQas(ctx, content)
+	generateQAsContentID := config.Config.MicrocmsGenerateQAsContentID
+	response, err := uc.chatGptClient.GenerateQas(ctx, content, generateQAsContentID)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }
