@@ -8,7 +8,9 @@ import (
 	chatgptApp "github.com/shinya-ac/server1Q1A/application/chatgpt"
 	folderApp "github.com/shinya-ac/server1Q1A/application/folder"
 	qaApp "github.com/shinya-ac/server1Q1A/application/qa"
+	config "github.com/shinya-ac/server1Q1A/configs"
 	"github.com/shinya-ac/server1Q1A/infrastructure/chatgpt"
+	"github.com/shinya-ac/server1Q1A/infrastructure/microcms"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/db"
 	"github.com/shinya-ac/server1Q1A/infrastructure/mysql/repository"
 	"github.com/shinya-ac/server1Q1A/middlewares/auth0"
@@ -51,7 +53,9 @@ func folderRoute(r *echo.Group) {
 }
 
 func chatRoute(r *echo.Group) {
-	ChatGPTRepository := chatgpt.NewChatGptClient()
+	microcmsApiKey := config.Config.MicrocmsApiKey
+	microcmsClient := microcms.NewMicrocmsClient(microcmsApiKey)
+	ChatGPTRepository := chatgpt.NewChatGptClient(microcmsClient)
 	chatgptUsecase := chatgptApp.NewChatGPTUseCase(ChatGPTRepository)
 	generateQasuseCase := chatgptApp.NewGenerateQasUseCase(ChatGPTRepository)
 	chatHandler := chatgptPre.NewHandler(chatgptUsecase, generateQasuseCase)

@@ -9,5 +9,5 @@ type Qas struct {
 
 type ChatGptClient interface {
 	GenerateQas(ctx context.Context, content string) ([]*Qas, error)
-	Ocr(ctx context.Context, imageURL string) (string, error)
+	Ocr(ctx context.Context, imageURL string, contentID string) (string, error)
 }

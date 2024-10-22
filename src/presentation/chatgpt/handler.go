@@ -46,7 +46,7 @@ func (h handler) Ocr(ctx echo.Context) error {
 		return err
 	}
 
-	response, err := h.ocrUseCase.HandleImageAnalysis(ctx.Request().Context(), params.ImageURL)
+	response, err := h.ocrUseCase.HandleOcr(ctx.Request().Context(), params.ImageURL)
 	if err != nil {
 		logging.Logger.Error("ChatGPT APIの実行に失敗", "error", err)
 		settings.ReturnError(ctx, err)
